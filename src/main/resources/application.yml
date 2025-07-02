@@ -1,0 +1,67 @@
+# Spring Boot 应用配置
+spring:
+  application:
+    name: langchain4j-order
+  profiles:
+    active: dev
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# OpenAI 配置
+langchain4j:
+  openai:
+    api-key: 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
+    model-name: gpt-3.5-turbo
+    base-url: https://api.openai.com/v1
+    timeout: 60s
+    max-retries: 3
+    log-requests: false
+    log-responses: false
+
+# Chat Memory 配置
+chat:
+  memory:
+    default-max-messages: 20
+    session-max-messages: 50
+    agent-max-messages: 30
+    enable-cross-agent-context: true
+    session-timeout-minutes: 30
+    enable-session-persistence: false
+    memory-cleanup-interval-minutes: 60
+    max-active-sessions: 100
+
+# 日志配置
+logging:
+  level:
+    com.example.orderagent: DEBUG
+    dev.langchain4j: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+---
+# 开发环境配置
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+logging:
+  level:
+    root: INFO
+    com.example.orderagent: DEBUG
+
+---
+# 生产环境配置
+spring:
+  config:
+    activate:
+      on-profile: prod
+      
+logging:
+  level:
+    root: WARN
+    com.example.orderagent: INFO

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Agent Chat Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .chat-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .chat-header {
+            background: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        .user-message {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        .agent-message {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .chat-input {
+            display: flex;
+            padding: 20px;
+            gap: 10px;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .chat-input button {
+            padding: 12px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .chat-input button:hover {
+            background: #0056b3;
+        }
+        .chat-input button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .session-info {
+            padding: 10px 20px;
+            background: #e9ecef;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .controls {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .controls button {
+            padding: 8px 16px;
+            border: 1px solid #007bff;
+            background: white;
+            color: #007bff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .controls button:hover {
+            background: #007bff;
+            color: white;
+        }
+        .examples {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .example-button {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .example-button:hover {
+            background: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Order Agent Chat Test</h1>
+            <p>测试订单管理智能助手</p>
+        </div>
+        
+        <div class="session-info">
+            <span>Session ID: <span id="sessionId">未连接</span></span>
+            <span style="float: right;">Status: <span id="status">Ready</span></span>
+        </div>
+        
+        <div class="controls">
+            <button onclick="newSession()">新建会话</button>
+            <button onclick="clearSession()">清除会话</button>
+            <button onclick="checkHealth()">健康检查</button>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message agent-message">
+                <strong>Order Agent:</strong> 您好！我是订单管理助手，可以帮您创建、查询、更新和取消订单。请告诉我您需要什么帮助？
+            </div>
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="输入您的消息..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()" id="sendButton">发送</button>
+        </div>
+    </div>
+    
+    <div class="examples">
+        <h3>示例对话</h3>
+        <p>点击下面的示例快速测试：</p>
+        <div class="example-button" onclick="sendExampleMessage('我想创建一个新订单')">创建订单</div>
+        <div class="example-button" onclick="sendExampleMessage('查询我的订单')">查询订单</div>
+        <div class="example-button" onclick="sendExampleMessage('我想更新订单信息')">更新订单</div>
+        <div class="example-button" onclick="sendExampleMessage('取消订单')">取消订单</div>
+        <div class="example-button" onclick="sendExampleMessage('帮我创建一个商品为iPhone 15，数量为2的订单')">具体创建订单</div>
+        <div class="example-button" onclick="sendExampleMessage('查询订单ID为123的订单详情')">查询特定订单</div>
+    </div>
+
+    <script>
+        let currentSessionId = null;
+        const API_BASE = '/api/chat';
+        
+        // 页面加载时生成新会话
+        window.onload = function() {
+            newSession();
+        };
+        
+        function generateSessionId() {
+            return 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        function newSession() {
+            currentSessionId = generateSessionId();
+            document.getElementById('sessionId').textContent = currentSessionId;
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="message agent-message">
+                    <strong>Order Agent:</strong> 新会话已创建！我是订单管理助手，可以帮您创建、查询、更新和取消订单。请告诉我您需要什么帮助？
+                </div>
+            `;
+            updateStatus('Ready');
+        }
+        
+        function clearSession() {
+            if (!currentSessionId) {
+                alert('没有活动会话');
+                return;
+            }
+            
+            fetch(`${API_BASE}/session/${currentSessionId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addMessage('system', '会话已清除');
+                } else {
+                    addMessage('error', '清除会话失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                addMessage('error', '清除会话时发生错误: ' + error.message);
+            });
+        }
+        
+        function checkHealth() {
+            updateStatus('Checking...');
+            fetch(`${API_BASE}/health`)
+            .then(response => response.json())
+            .then(data => {
+                addMessage('system', `健康检查: ${data.status} - ${data.service}`);
+                updateStatus('Healthy');
+            })
+            .catch(error => {
+                addMessage('error', '健康检查失败: ' + error.message);
+                updateStatus('Error');
+            });
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) {
+                alert('请输入消息');
+                return;
+            }
+            
+            if (!currentSessionId) {
+                alert('请先创建会话');
+                return;
+            }
+            
+            // 显示用户消息
+            addMessage('user', message);
+            input.value = '';
+            
+            // 禁用发送按钮
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = true;
+            sendButton.textContent = '发送中...';
+            updateStatus('Processing...');
+            
+            // 发送到后端
+            fetch(`${API_BASE}/message/${currentSessionId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addMessage('agent', data.response);
+                    updateStatus('Ready');
+                } else {
+                    addMessage('error', '错误: ' + data.message);
+                    updateStatus('Error');
+                }
+            })
+            .catch(error => {
+                addMessage('error', '发送消息时发生错误: ' + error.message);
+                updateStatus('Error');
+            })
+            .finally(() => {
+                // 重新启用发送按钮
+                sendButton.disabled = false;
+                sendButton.textContent = '发送';
+            });
+        }
+        
+        function sendExampleMessage(message) {
+            document.getElementById('messageInput').value = message;
+            sendMessage();
+        }
+        
+        function addMessage(type, content) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            switch(type) {
+                case 'user':
+                    messageDiv.className += ' user-message';
+                    messageDiv.innerHTML = `<strong>您:</strong> ${content}`;
+                    break;
+                case 'agent':
+                    messageDiv.className += ' agent-message';
+                    messageDiv.innerHTML = `<strong>Order Agent:</strong> ${content}`;
+                    break;
+                case 'error':
+                    messageDiv.className += ' error-message';
+                    messageDiv.innerHTML = `<strong>错误:</strong> ${content}`;
+                    break;
+                case 'system':
+                    messageDiv.className += ' agent-message';
+                    messageDiv.innerHTML = `<strong>系统:</strong> ${content}`;
+                    break;
+            }
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function updateStatus(status) {
+            document.getElementById('status').textContent = status;
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>

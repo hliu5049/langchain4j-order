@@ -1,0 +1,27 @@
+# ChatMemory配置示例
+chat:
+  memory:
+    # 默认最大消息数
+    default-max-messages: 20
+    # 会话级别最大消息数
+    session-max-messages: 50
+    # Agent级别最大消息数
+    agent-max-messages: 20
+    # 是否启用跨Agent上下文共享
+    enable-cross-agent-context: true
+    # 会话超时时间（分钟）
+    session-timeout-minutes: 30
+    # 是否启用会话持久化
+    enable-session-persistence: false
+    # 内存清理间隔（分钟）
+    memory-cleanup-interval-minutes: 60
+    # 最大活跃会话数
+    max-active-sessions: 1000
+
+# Spring调度配置
+spring:
+  task:
+    scheduling:
+      enabled: true
+      pool:
+        size: 2
