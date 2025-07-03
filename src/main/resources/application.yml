@@ -14,7 +14,7 @@ server:
 # OpenAI 配置
 langchain4j:
   openai:
-    api-key: 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
+    api-key: YOUR_OPENAI_API_KEY_HERE
     model-name: gpt-3.5-turbo
     base-url: https://api.openai.com/v1
     timeout: 60s
