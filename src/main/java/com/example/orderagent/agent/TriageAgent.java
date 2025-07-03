@@ -138,8 +138,27 @@ public class TriageAgent {
         public String handoffToQueryOrderAgent() {
             if (triageAgent.currentSessionId != null) {
                 ChatMemory sessionMemory = triageAgent.chatMemoryManager.getMemory(triageAgent.currentSessionId, AGENT_TYPE);
-                String userMessage = getMessageText(sessionMemory.messages().get(sessionMemory.messages().size() - 1));
-                return triageAgent.queryOrderAgent.process(userMessage, triageAgent.currentSessionId);
+
+                // 构建包含历史上下文的消息
+                StringBuilder contextMessage = new StringBuilder();
+
+                // 收集用户的所有相关消息
+                for (ChatMessage message : sessionMemory.messages()) {
+                    if (message instanceof UserMessage) {
+                        String userText = getMessageText(message);
+                        if (contextMessage.length() > 0) {
+                            contextMessage.append(" ");
+                        }
+                        contextMessage.append(userText);
+                    }
+                }
+
+                // 如果没有找到用户消息，使用最后一条消息
+                String finalMessage = contextMessage.length() > 0 ?
+                        contextMessage.toString() :
+                        getMessageText(sessionMemory.messages().get(sessionMemory.messages().size() - 1));
+
+                return triageAgent.queryOrderAgent.process(finalMessage, triageAgent.currentSessionId);
             } else {
                 ChatMemory agentMemory = triageAgent.chatMemoryManager.getAgentMemory(AGENT_TYPE);
                 String userMessage = getMessageText(agentMemory.messages().get(agentMemory.messages().size() - 1));
@@ -151,8 +170,26 @@ public class TriageAgent {
         public String handoffToUpdateOrderAgent() {
             if (triageAgent.currentSessionId != null) {
                 ChatMemory sessionMemory = triageAgent.chatMemoryManager.getMemory(triageAgent.currentSessionId, AGENT_TYPE);
-                String userMessage = getMessageText(sessionMemory.messages().get(sessionMemory.messages().size() - 1));
-                return triageAgent.updateOrderAgent.process(userMessage, triageAgent.currentSessionId);
+
+                // 构建包含历史上下文的消息
+                StringBuilder contextMessage = new StringBuilder();
+
+                // 收集用户的所有相关消息
+                for (ChatMessage message : sessionMemory.messages()) {
+                    if (message instanceof UserMessage) {
+                        String userText = getMessageText(message);
+                        if (contextMessage.length() > 0) {
+                            contextMessage.append(" ");
+                        }
+                        contextMessage.append(userText);
+                    }
+                }
+
+                // 如果没有找到用户消息，使用最后一条消息
+                String finalMessage = contextMessage.length() > 0 ?
+                        contextMessage.toString() :
+                        getMessageText(sessionMemory.messages().get(sessionMemory.messages().size() - 1));
+                return triageAgent.updateOrderAgent.process(finalMessage, triageAgent.currentSessionId);
             } else {
                 ChatMemory agentMemory = triageAgent.chatMemoryManager.getAgentMemory(AGENT_TYPE);
                 String userMessage = getMessageText(agentMemory.messages().get(agentMemory.messages().size() - 1));
@@ -164,8 +201,26 @@ public class TriageAgent {
         public String handoffToCancelOrderAgent() {
             if (triageAgent.currentSessionId != null) {
                 ChatMemory sessionMemory = triageAgent.chatMemoryManager.getMemory(triageAgent.currentSessionId, AGENT_TYPE);
-                String userMessage = getMessageText(sessionMemory.messages().get(sessionMemory.messages().size() - 1));
-                return triageAgent.cancelOrderAgent.process(userMessage, triageAgent.currentSessionId);
+
+                // 构建包含历史上下文的消息
+                StringBuilder contextMessage = new StringBuilder();
+
+                // 收集用户的所有相关消息
+                for (ChatMessage message : sessionMemory.messages()) {
+                    if (message instanceof UserMessage) {
+                        String userText = getMessageText(message);
+                        if (contextMessage.length() > 0) {
+                            contextMessage.append(" ");
+                        }
+                        contextMessage.append(userText);
+                    }
+                }
+
+                // 如果没有找到用户消息，使用最后一条消息
+                String finalMessage = contextMessage.length() > 0 ?
+                        contextMessage.toString() :
+                        getMessageText(sessionMemory.messages().get(sessionMemory.messages().size() - 1));
+                return triageAgent.cancelOrderAgent.process(finalMessage, triageAgent.currentSessionId);
             } else {
                 ChatMemory agentMemory = triageAgent.chatMemoryManager.getAgentMemory(AGENT_TYPE);
                 String userMessage = getMessageText(agentMemory.messages().get(agentMemory.messages().size() - 1));
